@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090d18">
+<title>APKForge — HTML to APK</title>
+<style>
+:root{color-scheme:dark;--bg:#090d18;--panel:#111a2b;--line:#25344c;--muted:#91a1bb;--text:#f3f6ff;--accent:#7c6cff;--cyan:#35d6c5}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#1d2450 0,transparent 35%),var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:760px;margin:auto;padding:22px 16px 48px}.top{display:flex;align-items:center;gap:12px;margin:8px 0 28px}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--cyan));display:grid;place-items:center;font-weight:900;color:white;font-size:21px}.brand{font-size:20px;font-weight:800;letter-spacing:.3px}.sub{color:var(--muted);font-size:12px}
+.hero{padding:24px 0 18px}.tag{display:inline-block;color:#bdb6ff;background:#27234b;border:1px solid #454078;padding:6px 10px;border-radius:30px;font-size:11px;font-weight:700}.hero h1{font-size:clamp(30px,8vw,44px);line-height:1.08;margin:16px 0 10px}.hero p{color:var(--muted);line-height:1.6;margin:0}
+.card{background:linear-gradient(180deg,#141f33,#101827);border:1px solid var(--line);border-radius:20px;padding:18px;margin:14px 0;box-shadow:0 12px 35px #0003}.section-title{font-size:16px;font-weight:750;margin:0 0 14px}.drop{border:1.5px dashed #465779;border-radius:16px;padding:24px 14px;text-align:center;background:#0d1524}.drop strong{display:block;margin:8px 0}.drop small{color:var(--muted)}input,select{width:100%;background:#0a1220;border:1px solid #2a3a55;color:var(--text);border-radius:12px;padding:13px;margin-top:7px;font:inherit;min-width:0}label{display:block;color:#c8d2e5;font-size:13px;margin:13px 0 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check{display:flex;align-items:center;gap:9px;color:#cbd6e9;font-size:13px;margin-top:13px}.check input{width:18px;height:18px;margin:0;accent-color:var(--accent)}button{width:100%;border:0;border-radius:13px;padding:15px;background:linear-gradient(100deg,var(--accent),#4b9fff);color:white;font-weight:800;font-size:15px;margin-top:16px;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.status{display:none;margin-top:14px;padding:13px;border-radius:12px;background:#0b1525;border:1px solid var(--line);line-height:1.5;overflow-wrap:anywhere}.muted{color:var(--muted);font-size:12px;line-height:1.6}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:18px 0}.step{background:#121d30;border:1px solid var(--line);border-radius:12px;padding:10px 5px;text-align:center;color:var(--muted);font-size:10px}.step b{display:block;color:var(--cyan);font-size:16px;margin-bottom:4px}.footer{text-align:center;color:#71819c;font-size:11px;margin-top:26px}
+@media(max-width:420px){.grid{grid-template-columns:1fr}.card{padding:15px}.steps{gap:4px}.step{font-size:9px}}
+</style>
+</head>
+<body><main>
+<header class="top"><div class="logo">A</div><div><div class="brand">APKForge</div><div class="sub">HTML → Android APK Builder</div></div></header>
+<section class="hero"><span class="tag">CLOUD BUILD • v1.0</span><h1>Turn your website<br>into an Android app.</h1><p>Upload your HTML project, customize your app, and build an installable APK in the cloud.</p></section>
+<div class="steps"><div class="step"><b>01</b>Upload</div><div class="step"><b>02</b>Configure</div><div class="step"><b>03</b>Build</div><div class="step"><b>04</b>Download</div></div>
+<section class="card">
+<h2 class="section-title">① Upload HTML project</h2>
+<label class="drop" for="project"><span style="font-size:30px">📦</span><strong id="fileName">Choose project ZIP</strong><small>ZIP only • maximum 10 MB • index.html at ZIP root</small></label>
+<input id="project" type="file" accept=".zip,application/zip" style="display:none">
+<p class="muted">Example: index.html, styles.css, script.js, assets/</p>
+</section>
+<section class="card">
+<h2 class="section-title">② App configuration</h2>
+<label>App name<input id="appName" maxlength="30" value="My HTML App" placeholder="My App"></label>
+<div class="grid">
+<label>Package ID<input id="packageId" value="com.example.myhtmlapp" maxlength="120"></label>
+<label>Version name<input id="version" value="1.0.0" maxlength="20"></label>
+</div>
+<label class="check"><input id="camera" type="checkbox"> Enable camera permission</label>
+<label class="check"><input id="internet" type="checkbox" checked> Enable internet access</label>
+<button id="build">⚡ Build Android APK</button>
+<div class="status" id="status" role="status"></div>
+</section>
+<section class="card">
+<h2 class="section-title">Build requirements</h2>
+<p class="muted">APKForge needs its cloud backend and GitHub Actions configured before building. This page does not compile APKs inside your phone. See README_BN.md for setup.</p>
+</section>
+<div class="footer">APKForge • Personal project builder</div>
+</main>
+<script>
+/*
+  Configure the HTTPS URL of your deployed Node backend here.
+  Do not put a GitHub token in this file.
+  For a private personal MVP, backend APP_API_KEY can be entered below,
+  but browser-visible keys are not suitable for a public service.
+*/
+const API_BASE = "https://YOUR-BACKEND.example.com";
+const API_KEY = ""; // MVP only; use server-side login/session for public deployments.
+const $ = id => document.getElementById(id);
+let selectedFile = null;
+$("project").addEventListener("change", e => {
+  selectedFile = e.target.files[0] || null;
+  $("fileName").textContent = selectedFile ? selectedFile.name : "Choose project ZIP";
+});
+function show(message){const s=$("status");s.style.display="block";s.textContent=message;}
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+$("build").addEventListener("click", async()=>{
+  if(!selectedFile){show("Please choose a ZIP file first.");return;}
+  if(selectedFile.size>10*1024*1024){show("ZIP is larger than 10 MB.");return;}
+  if(API_BASE.includes("YOUR-BACKEND")){show("Setup needed: deploy the server and set API_BASE in this file. Follow README_BN.md.");return;}
+  const appName=$("appName").value.trim(), packageId=$("packageId").value.trim(), version=$("version").value.trim();
+  if(!appName){show("Enter an app name.");return;}
+  if(!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*){2,}$/.test(packageId)){show("Package ID format is invalid. Example: com.example.myapp");return;}
+  $("build").disabled=true;show("Uploading project to the cloud…");
+  try{
+    const fd=new FormData();fd.append("project",selectedFile);fd.append("appName",appName);fd.append("packageId",packageId);fd.append("version",version);fd.append("camera",$("camera").checked?"true":"false");fd.append("internet",$("internet").checked?"true":"false");
+    const headers={};if(API_KEY)headers["x-api-key"]=API_KEY;
+    let res=await fetch(API_BASE.replace(/\/$/,"")+"/api/build",{method:"POST",headers,body:fd});
+    let data=await res.json();if(!res.ok)throw new Error(data.error||"Upload failed");
+    const id=data.buildId;show("Build queued. Build ID: "+id+"\nChecking build status…");
+    for(let i=0;i<90;i++){
+      await sleep(7000);
+      res=await fetch(API_BASE.replace(/\/$/,"")+"/api/status/"+encodeURIComponent(id),{headers});
+      data=await res.json();if(!res.ok)throw new Error(data.error||"Status check failed");
+      show("Build status: "+data.status+(data.message?"\n"+data.message:""));
+      if(data.status==="success"){
+        const a=document.createElement("a");a.href=API_BASE.replace(/\/$/,"")+"/api/download/"+encodeURIComponent(id);if(API_KEY)a.href+="?key="+encodeURIComponent(API_KEY);
+        a.textContent="⬇ Download APK";a.style.display="block";a.style.marginTop="12px";a.style.color="#8be9dd";a.style.fontWeight="800";$("status").appendChild(a);break;
+      }
+      if(data.status==="failure"||data.status==="cancelled")break;
+    }
+  }catch(e){show("Error: "+e.message+"\nCheck your backend configuration and GitHub Actions logs.");}
+  finally{$("build").disabled=false;}
+});
+</script></body></html>
