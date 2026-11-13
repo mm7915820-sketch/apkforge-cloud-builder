@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101126">
+<title>Lucky Wheel — Spin Your Luck</title>
+<style>
+:root{color-scheme:dark;--bg:#101126;--panel:#1b1d39;--text:#f7f7ff;--muted:#b9bbd5;--accent:#ffd166}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#29234d,var(--bg) 65%);color:var(--text);font-family:system-ui,Arial,sans-serif;min-height:100vh;padding:20px}
+main{max-width:900px;margin:auto}.top{text-align:center;margin-bottom:18px}.top h1{margin:0;font-size:clamp(28px,6vw,44px)}.top p{color:var(--muted);margin:6px 0}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{background:#1b1d39eF;border:1px solid #ffffff20;border-radius:20px;padding:18px;box-shadow:0 12px 35px #0004}
+.wheelbox{position:relative;max-width:430px;margin:auto}.pointer{position:absolute;z-index:2;top:-7px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:17px solid transparent;border-right:17px solid transparent;border-top:34px solid var(--accent);filter:drop-shadow(0 3px 4px #0008)}
+canvas{width:100%;height:auto;display:block}.spin{display:block;margin:12px auto 0;background:var(--accent);color:#171426;border:0;border-radius:999px;padding:14px 34px;font-size:19px;font-weight:800;cursor:pointer}.spin:disabled{opacity:.55}
+h2{font-size:19px;margin:0 0 12px}textarea{width:100%;min-height:180px;resize:vertical;background:#101126;color:white;border:1px solid #ffffff30;border-radius:12px;padding:12px;font:inherit;line-height:1.7}
+button,select{font:inherit}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.actions button,.actions select{background:#303252;color:white;border:1px solid #ffffff25;border-radius:10px;padding:9px 12px;cursor:pointer}.result{margin-top:15px;text-align:center;background:#101126;border-radius:14px;padding:14px}.result small{color:var(--muted)}.result strong{display:block;font-size:25px;color:var(--accent);margin-top:4px}
+.history{color:var(--muted);font-size:14px;line-height:1.8;max-height:120px;overflow:auto}.note{font-size:12px;color:var(--muted);text-align:center;margin-top:18px}
+@media(max-width:700px){body{padding:12px}.layout{grid-template-columns:1fr}.panel{padding:14px}}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><h1>🎡 Lucky Wheel</h1><p>Spin Your Luck — আজ কী হবে?</p></header>
+<div class="layout">
+<section class="panel">
+<div class="wheelbox"><div class="pointer"></div><canvas id="wheel" width="600" height="600"></canvas></div>
+<button class="spin" id="spin">SPIN!</button>
+<div class="result"><small>তোমার ফলাফল</small><strong id="result">চাকা ঘোরাও!</strong></div>
+</section>
+<section class="panel">
+<h2>✏️ নিজের অপশন লেখো</h2>
+<textarea id="items">Pizza
+Burger
+Ice cream
+চা
+বন্ধুকে ফোন
+একটু বিশ্রাম
+গান শোনা
+বাইরে ঘোরা</textarea>
+<div class="actions">
+<button id="update">Update Wheel</button><button id="shuffle">Shuffle</button><button id="clear">Clear</button>
+<select id="preset"><option value="">Preset বেছে নাও</option><option value="yes">Yes / No</option><option value="food">Food</option><option value="friends">Friends</option><option value="tasks">Tasks</option></select>
+</div>
+<h2 style="margin-top:20px">🕘 Spin History</h2><div class="history" id="history">এখনো কোনো ফলাফল নেই।</div>
+<div class="actions"><button id="copy">ফলাফল Copy</button><button id="reset">Reset</button></div>
+</section>
+</div>
+<p class="note">শুধু মজার জন্য random picker — কোনো পুরস্কার বা অর্থ জেতার ব্যবস্থা নয়।</p>
+</main>
+<script>
+const canvas=document.getElementById('wheel'),ctx=canvas.getContext('2d');
+const input=document.getElementById('items'),result=document.getElementById('result'),spinBtn=document.getElementById('spin');
+const colors=['#ef476f','#ffd166','#06d6a0','#118ab2','#9b5de5','#f15bb5','#00bbf9','#f77f00'];
+let entries=[],angle=0,spinning=false,lastResult='';
+const TAU=Math.PI*2;
+function getEntries(){return input.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
+function draw(){
+ const n=entries.length;ctx.clearRect(0,0,600,600);
+ if(!n){ctx.fillStyle='#333653';ctx.beginPath();ctx.arc(300,300,280,0,TAU);ctx.fill();ctx.fillStyle='white';ctx.textAlign='center';ctx.font='28px sans-serif';ctx.fillText('অপশন যোগ করো',300,310);return}
+ const step=TAU/n;
+ entries.forEach((v,i)=>{
+  const start=angle+i*step-Math.PI/2;
+  ctx.beginPath();ctx.moveTo(300,300);ctx.arc(300,300,280,start,start+step);ctx.closePath();ctx.fillStyle=colors[i%colors.length];ctx.fill();
+  ctx.strokeStyle='#fff9';ctx.lineWidth=3;ctx.stroke();
+  ctx.save();ctx.translate(300,300);ctx.rotate(start+step/2);ctx.textAlign='right';ctx.fillStyle='#171426';ctx.font='bold 21px system-ui';let t=v.length>19?v.slice(0,18)+'…':v;ctx.fillText(t,255,8);ctx.restore();
+ });
+ ctx.beginPath();ctx.arc(300,300,43,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.fillStyle='#171426';ctx.textAlign='center';ctx.font='bold 20px sans-serif';ctx.fillText('LUCK',300,307);
+}
+function update(){entries=getEntries();draw();result.textContent=entries.length?'চাকা ঘোরাও!':'অপশন যোগ করো';}
+document.getElementById('update').onclick=update;
+document.getElementById('shuffle').onclick=()=>{entries.sort(()=>Math.random()-.5);input.value=entries.join('\n');draw()};
+document.getElementById('clear').onclick=()=>{input.value='';update()};
+document.getElementById('preset').onchange=e=>{
+ const presets={yes:['হ্যাঁ','না'],food:['Pizza','Burger','চটপটি','ফুচকা','আইসক্রিম'],friends:['Hasan','Hujaifa','Rafi','Sami'],tasks:['পড়াশোনা','খেলা','গান শোনা','বিশ্রাম','বই পড়া']};
+ if(presets[e.target.value]){input.value=presets[e.target.value].join('\n');update()}e.target.value='';
+};
+spinBtn.onclick=()=>{
+ if(spinning||entries.length<2){if(entries.length<2)result.textContent='কমপক্ষে ২টি অপশন দাও';return}
+ spinning=true;spinBtn.disabled=true;
+ const chosen=Math.floor(Math.random()*entries.length),step=TAU/entries.length;
+ const target=((-(chosen+.5)*step)%TAU+TAU)%TAU;
+ const start=angle,extra=TAU*(5+Math.floor(Math.random()*3));
+ const delta=extra+((target-start%TAU+TAU)%TAU),duration=4200,begin=performance.now();
+ function frame(now){let p=Math.min(1,(now-begin)/duration),ease=1-Math.pow(1-p,4);angle=start+delta*ease;draw();if(p<1)requestAnimationFrame(frame);else{
+  angle=target;draw();lastResult=entries[chosen];result.textContent=lastResult;
+  const h=document.getElementById('history');h.textContent=(lastResult+'  •  '+new Date().toLocaleTimeString()+' | '+h.textContent).slice(0,900);
+  spinning=false;spinBtn.disabled=false;
+ }}
+ requestAnimationFrame(frame);
+};
+document.getElementById('copy').onclick=async()=>{if(!lastResult)return;try{await navigator.clipboard.writeText(lastResult);result.textContent='Copied: '+lastResult}catch(e){result.textContent=lastResult}};
+document.getElementById('reset').onclick=()=>{input.value='Pizza\nBurger\nIce cream\nচা\nবন্ধুকে ফোন\nএকটু বিশ্রাম\nগান শোনা\nবাইরে ঘোরা';document.getElementById('history').textContent='এখনো কোনো ফলাফল নেই।';lastResult='';angle=0;update()};
+update();
+</script>
+</body></html>
